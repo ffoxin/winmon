@@ -121,15 +121,17 @@ void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, L
 			return;
 
 		is_display = wcsstr( dev_int->dbcc_name, detect_token );
-		if( is_display != 0 )
+		if( is_display != 0 || wcsstr( dev_int->dbcc_name, L"USB" ) != 0 )
 		{
-			output << detect_token << L"\t";
+			output << dev_int->dbcc_name << L"\t";
 			
 			g_WinCount = 0;
 			g_WinMaxCount = 0;
 
 			HWINSTA hWinSta;
-			hWinSta = OpenWindowStation( L"WinSta0", FALSE, 
+			hWinSta = OpenWindowStation( L"WinSta0", FALSE, /*MAXIMUM_ALLOWED*/
+				READ_CONTROL				|
+				WRITE_OWNER					|
 				WINSTA_ACCESSCLIPBOARD		| 
 				WINSTA_ACCESSGLOBALATOMS	| 
 				WINSTA_CREATEDESKTOP		| 
@@ -142,17 +144,22 @@ void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, L
 			if( !hWinSta )
 			{
 				WriteLog( L"ControlHandlerEx::OpenWindowStation", GetLastError( ) );
+
 				return;
 			}
 
 			if( !SetProcessWindowStation( hWinSta ) )
 			{
+				CloseWindowStation( hWinSta );
 				WriteLog( L"ControlHandlerEx::SetProcessWindowStation", GetLastError( ) );
+
 				return;
 			}
 
 			HDESK hDesktop;
-			hDesktop = OpenDesktop( L"Default", 0, FALSE, 
+			hDesktop = OpenDesktop( L"Default", 0, FALSE, /*MAXIMUM_ALLOWED*/
+				READ_CONTROL				|
+				WRITE_OWNER					|
 				DESKTOP_CREATEMENU			| 
 				DESKTOP_CREATEWINDOW		| 
 				DESKTOP_ENUMERATE			| 
@@ -164,22 +171,31 @@ void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, L
 				DESKTOP_WRITEOBJECTS );
 			if( !hDesktop )
 			{
+				CloseWindowStation( hWinSta );
 				WriteLog( L"ControlHandlerEx::OpenDesktop", GetLastError( ) );
+
 				return;
 			}
 
 			if( !SetThreadDesktop( hDesktop ) )
 			{
+				CloseWindowStation( hWinSta );
+				CloseDesktop( hDesktop );
 				WriteLog( L"ControlHandlerEx::SetThreadDesktop", GetLastError( ) );
+
 				return;
 			}
 
 			if( !EnumDesktopWindows( hDesktop, EnumWindowsProc, 0 ) )
 			{
+				CloseWindowStation( hWinSta );
+				CloseDesktop( hDesktop );
 				WriteLog( L"ControlHandlerEx::EnumDesktopWindows", GetLastError( ) );
+
 				return;
 			}
 
+			CloseWindowStation( hWinSta );
 			CloseDesktop( hDesktop );
 
 			output << g_WinMaxCount << " of " << g_WinCount;

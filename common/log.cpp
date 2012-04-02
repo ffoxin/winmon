@@ -17,12 +17,15 @@ static TCHAR log_path[MAX_PATH];
 //	LOG FILE
 //==============================================================================
 
-int InitLog( )
+int InitLog( bool clear )
 {
 	if( !GetModuleFileName( 0, log_path, MAX_PATH ) )
 		return -1;
 
 	wcscpy( wcsrchr( log_path, L'.' ) + 1, L"log" );
+
+	if( clear )
+		_wunlink( log_path );
 
 	return 0;
 }

@@ -19,8 +19,6 @@ using std::endl;
 BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam );
 BOOL CALLBACK EnumDesktopProc( LPTSTR lpszDesktop, LPARAM lParam );
 BOOL CALLBACK EnumWindowStationProc( LPTSTR lpszWindowStation, LPARAM lParam );
-void WriteLog( TCHAR *msg );
-void WriteLog( TCHAR *msg, DWORD error );
 
 
 size_t		g_Stations	= 0;
@@ -32,26 +30,21 @@ HDESK		hDesktop	= 0;
 HWINSTA		hDefSta		= 0;
 HDESK		hDefDesktop	= 0;
 
-TCHAR		log_path[MAX_PATH];
-
 
 int _tmain( int argc, TCHAR *argv[] )
 {
-	GetModuleFileName( 0, log_path, MAX_PATH );
-	wcscpy( wcsrchr( log_path, L'.' ) + 1, L"log" );
-	_wunlink( log_path );
+	InitLog( true );
 
 	HWINSTA	hDefSta		= GetProcessWindowStation( );
 	HDESK	hDefDesktop	= GetThreadDesktop( GetCurrentThreadId( ) );
 
-	WriteLog( L"hi" );
 	if( !EnumWindowStations( EnumWindowStationProc, 0 ) )
 	{
 		WriteLog( L"_tmain::EnumWindowStations", GetLastError( ) );
 	}
 
-	SetProcessWindowStation( hDefSta );
-	SetThreadDesktop( hDefDesktop );
+	//SetProcessWindowStation( hDefSta );
+	//SetThreadDesktop( hDefDesktop );
 
 	wcout << L"Stations:\t" << g_Stations << endl;
 	wcout << L"Desktops:\t" << g_Desktops << endl;
@@ -69,8 +62,8 @@ BOOL CALLBACK EnumWindowStationProc( LPTSTR lpszWindowStation, LPARAM lParam )
 	wcscat( buf, lpszWindowStation );
 	WriteLog( buf );
 
-	hWinSta = OpenWindowStation( lpszWindowStation, FALSE, 
-		WINSTA_ACCESSCLIPBOARD   | 
+	hWinSta = OpenWindowStation( lpszWindowStation, FALSE, MAXIMUM_ALLOWED
+		/*WINSTA_ACCESSCLIPBOARD   | 
 		WINSTA_ACCESSGLOBALATOMS | 
 		WINSTA_CREATEDESKTOP     | 
 		WINSTA_ENUMDESKTOPS      | 
@@ -78,7 +71,7 @@ BOOL CALLBACK EnumWindowStationProc( LPTSTR lpszWindowStation, LPARAM lParam )
 		WINSTA_EXITWINDOWS       | 
 		WINSTA_READATTRIBUTES    | 
 		WINSTA_READSCREEN        | 
-		WINSTA_WRITEATTRIBUTES );
+		WINSTA_WRITEATTRIBUTES*/ );
 	if( !hWinSta )
 	{
 		WriteLog( L"EnumWindowStationProc::OpenWindowStation", GetLastError( ) );
@@ -116,8 +109,8 @@ BOOL CALLBACK EnumDesktopProc( LPTSTR lpszDesktop, LPARAM lParam )
 	wcscat( buf, lpszDesktop );
 	WriteLog( buf );
 
-	hDesktop = OpenDesktop( lpszDesktop, DF_ALLOWOTHERACCOUNTHOOK, FALSE, 
-		DESKTOP_CREATEMENU		| 
+	hDesktop = OpenDesktop( lpszDesktop, DF_ALLOWOTHERACCOUNTHOOK, FALSE, MAXIMUM_ALLOWED
+		/*DESKTOP_CREATEMENU		| 
 		DESKTOP_CREATEWINDOW	| 
 		DESKTOP_ENUMERATE		| 
 		DESKTOP_HOOKCONTROL		| 
@@ -125,7 +118,7 @@ BOOL CALLBACK EnumDesktopProc( LPTSTR lpszDesktop, LPARAM lParam )
 		DESKTOP_JOURNALRECORD	| 
 		DESKTOP_READOBJECTS		| 
 		DESKTOP_SWITCHDESKTOP	| 
-		DESKTOP_WRITEOBJECTS );
+		DESKTOP_WRITEOBJECTS*/ );
 	if( !hDesktop )
 	{
 		WriteLog( L"EnumDesktopProc::OpenDesktop", GetLastError( ) );
@@ -174,24 +167,6 @@ BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
 	}
 
 	return TRUE;
-}
-
-void WriteLog( TCHAR *msg )
-{
-	std::wofstream log_file( log_path, std::ios::app );
-
-	TCHAR buf[9];
-	_wstrtime( buf );
-	log_file << std::endl << buf << "\t" << msg;
-}
-
-void WriteLog( TCHAR *msg, DWORD error )
-{
-	std::wofstream log_file( log_path, std::ios::app );
-
-	TCHAR buf[9];
-	_wstrtime( buf );
-	log_file << std :: endl << buf << "\t" << L"Error: " << msg << L" (" << error << L")";
 }
 
 

@@ -17,15 +17,15 @@ BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
 	WINDOWPLACEMENT		wp;
 	TCHAR				title[MAX_PATH];
 
+	g_WinCount++;
+
 	GetWindowText( hWnd, title, MAX_PATH );
 	GetWindowPlacement( hWnd, &wp );
-	//WriteLog( title );
-	g_WinCount++;
 
 	if( wp.showCmd == SW_MAXIMIZE )
 	{
 		g_WinMaxCount++;
-		//WriteLog( title );
+		WriteLog( title );
 		/*wp.showCmd = SW_SHOWNORMAL;
 		SetWindowPlacement( hWnd, &wp );
 		wp.showCmd = SW_MAXIMIZE;

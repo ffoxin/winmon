@@ -6,7 +6,7 @@
 //	LOG
 //==============================================================================
 
-int InitLog( );
+int InitLog( bool clear = false );
 int WriteLog( TCHAR *msg );
 int WriteLog( TCHAR *msg, DWORD msg_id );
 
