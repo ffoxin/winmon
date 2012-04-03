@@ -3,15 +3,22 @@
 
 
 //==============================================================================
-//	LOG
+//	Logging to file
 //==============================================================================
 
-int InitLog( bool clear = false );
-int WriteLog( TCHAR *msg );
-int WriteLog( TCHAR *msg, DWORD msg_id );
+int InitLog( bool clear = false );			// init log path
+int WriteLog( TCHAR *msg );					// log message
+int WriteLog( TCHAR *msg, DWORD msg_id );	// log message and FormatMessage
+											// from error code
 
-int WriteConsoleLog( TCHAR *msg );
-int WriteConsoleLog( TCHAR *msg, DWORD msg_id );
+
+//==============================================================================
+//	Logging to console
+//==============================================================================
+
+int WriteConsoleLog( TCHAR *msg );					// log message
+int WriteConsoleLog( TCHAR *msg, DWORD msg_id );	// log message and FormatMessage
+													// from error code
 
 
 #endif // LOG_H_1522_01042012

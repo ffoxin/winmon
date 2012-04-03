@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <fstream>
 #include <iostream>
+#include <locale>
 
 #include "log.h"
 
@@ -38,6 +39,8 @@ int WriteLog( TCHAR *msg )
 	log.open( log_path, std::ios::app );
 	if( log.fail( ) )
 		return -1;
+
+	log.imbue( std::locale( "rus_rus" ) );
 
 	_wstrtime( time );
 
