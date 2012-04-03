@@ -3,10 +3,19 @@
 
 
 //==============================================================================
+//	CONSTANTS
+//==============================================================================
+
+const TCHAR	detect_token[]	= L"DISPLAY";
+
+
+//==============================================================================
 //	Prosessor
 //==============================================================================
 
-BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam );
+void RegisterDeviceInterfaceNotification( SERVICE_STATUS_HANDLE hServiceStatusHandle );
+void UnregisterDeviceInterfaceNotification( );
+void DeviceEventProc( DWORD dwEventType, LPVOID lpEventData );
 
 
 #endif // RESTORER_H_1824_01042012

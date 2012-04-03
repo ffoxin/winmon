@@ -45,7 +45,13 @@ int WriteLog( TCHAR *msg )
 	_wstrtime( time );
 
 	log << time << "\t" << msg << std::endl;
-
+	if( log.fail( ) )
+	{
+		log.close( );
+		log.open( log_path, std::ios::app );
+		log << std::endl;
+	}
+	
 	log.close( );
 
 	return 0;
@@ -84,9 +90,13 @@ int WriteConsoleLog( TCHAR *msg )
 {
 	TCHAR			time[9];
 	
+	std::wcout.imbue( std::locale( ".866" ) );
+
 	_wstrtime( time );
 
 	std::wcout << time << "\t" << msg << std::endl;
+	if( std::wcout.fail( ) )
+		std::wcout << std::endl;
 
 	return 0;
 }
@@ -96,6 +106,8 @@ int WriteConsoleLog( TCHAR *msg, DWORD msg_id )
 	TCHAR			time[9];
 	LPTSTR			err_buf;
 	
+	std::wcout.imbue( std::locale( ".866" ) );
+
 	_wstrtime( time );
 
 	if( !FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 

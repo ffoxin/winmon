@@ -3,8 +3,6 @@
 #endif
 
 #include <Windows.h>
-#include <Dbt.h>
-#include <sstream>
 
 #include "..\common\log.h"
 #include "restorer.h"
@@ -16,9 +14,6 @@ extern TCHAR			*service_name;
 SERVICE_STATUS			g_ServiceStatus;
 SERVICE_STATUS_HANDLE	g_ServiceStatusHandle;
 HANDLE                  g_ServiceStopEvent = 0;
-HDEVNOTIFY				g_DeviceNotify;
-size_t					g_WinCount;
-size_t					g_WinMaxCount;
 
 
 //==============================================================================
@@ -48,12 +43,7 @@ void ServiceMain( DWORD dwArgc, LPTSTR *lpszArgv )
 											SERVICE_ACCEPT_SHUTDOWN | 
 											SERVICE_ACCEPT_HARDWAREPROFILECHANGE;
 
-	DEV_BROADCAST_DEVICEINTERFACE dev_int;
-	dev_int.dbcc_size			= sizeof( DEV_BROADCAST_DEVICEINTERFACE );
-	dev_int.dbcc_devicetype		= DBT_DEVTYP_DEVICEINTERFACE;
-
-	g_DeviceNotify = RegisterDeviceNotification( g_ServiceStatusHandle, &dev_int, 
-		DEVICE_NOTIFY_SERVICE_HANDLE | DEVICE_NOTIFY_ALL_INTERFACE_CLASSES );
+	RegisterDeviceInterfaceNotification( g_ServiceStatusHandle );
 
 	UpdateServiceStatus( SERVICE_START_PENDING, NO_ERROR, 3000 );
 
@@ -82,18 +72,17 @@ void InitService( DWORD dwArgc, LPTSTR *lpszArgv )
 
 void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext )
 {
-	std::wstringstream				output;
-
 	switch( dwControl )
 	{
 
 	case SERVICE_CONTROL_STOP:
+		UnregisterDeviceInterfaceNotification( );
+
 		UpdateServiceStatus( SERVICE_STOP_PENDING, NO_ERROR, 0 );
 
 		SetEvent( g_ServiceStopEvent );
 		UpdateServiceStatus( g_ServiceStatus.dwCurrentState, NO_ERROR, 0 );
 
-		UnregisterDeviceNotification( g_DeviceNotify );
 		WriteLog( L"Stopping" );
 		break;
 
@@ -107,102 +96,8 @@ void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, L
 		break;
 
 	case SERVICE_CONTROL_DEVICEEVENT:
-		PDEV_BROADCAST_HDR				dev_hdr;
-		PDEV_BROADCAST_DEVICEINTERFACE	dev_int;
-		TCHAR							*is_display;
-		
-		dev_hdr = (PDEV_BROADCAST_HDR) lpEventData;
-		if( dev_hdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE )
-			dev_int = (PDEV_BROADCAST_DEVICEINTERFACE) dev_hdr;
-
-		output << L"Device event\t";
-
-		if( !( dwEventType & ( DBT_DEVICEARRIVAL | DBT_DEVICEREMOVECOMPLETE ) ) )
-			return;
-
-		is_display = wcsstr( dev_int->dbcc_name, detect_token );
-		if( is_display != 0 || wcsstr( dev_int->dbcc_name, L"USB" ) != 0 )
-		{
-			output << dev_int->dbcc_name << L"\t";
-			
-			g_WinCount = 0;
-			g_WinMaxCount = 0;
-
-			HWINSTA hWinSta;
-			hWinSta = OpenWindowStation( L"WinSta0", FALSE, /*MAXIMUM_ALLOWED*/
-				READ_CONTROL				|
-				WRITE_OWNER					|
-				WINSTA_ACCESSCLIPBOARD		| 
-				WINSTA_ACCESSGLOBALATOMS	| 
-				WINSTA_CREATEDESKTOP		| 
-				WINSTA_ENUMDESKTOPS			| 
-				WINSTA_ENUMERATE			| 
-				WINSTA_EXITWINDOWS			| 
-				WINSTA_READATTRIBUTES		| 
-				WINSTA_READSCREEN			| 
-				WINSTA_WRITEATTRIBUTES );
-			if( !hWinSta )
-			{
-				WriteLog( L"ControlHandlerEx::OpenWindowStation", GetLastError( ) );
-
-				return;
-			}
-
-			if( !SetProcessWindowStation( hWinSta ) )
-			{
-				CloseWindowStation( hWinSta );
-				WriteLog( L"ControlHandlerEx::SetProcessWindowStation", GetLastError( ) );
-
-				return;
-			}
-
-			HDESK hDesktop;
-			hDesktop = OpenDesktop( L"Default", 0, FALSE, /*MAXIMUM_ALLOWED*/
-				READ_CONTROL				|
-				WRITE_OWNER					|
-				DESKTOP_CREATEMENU			| 
-				DESKTOP_CREATEWINDOW		| 
-				DESKTOP_ENUMERATE			| 
-				DESKTOP_HOOKCONTROL			| 
-				DESKTOP_JOURNALPLAYBACK		| 
-				DESKTOP_JOURNALRECORD		| 
-				DESKTOP_READOBJECTS			| 
-				DESKTOP_SWITCHDESKTOP		| 
-				DESKTOP_WRITEOBJECTS );
-			if( !hDesktop )
-			{
-				CloseWindowStation( hWinSta );
-				WriteLog( L"ControlHandlerEx::OpenDesktop", GetLastError( ) );
-
-				return;
-			}
-
-			if( !SetThreadDesktop( hDesktop ) )
-			{
-				CloseWindowStation( hWinSta );
-				CloseDesktop( hDesktop );
-				WriteLog( L"ControlHandlerEx::SetThreadDesktop", GetLastError( ) );
-
-				return;
-			}
-
-			if( !EnumDesktopWindows( hDesktop, EnumWindowsProc, 0 ) )
-			{
-				CloseWindowStation( hWinSta );
-				CloseDesktop( hDesktop );
-				WriteLog( L"ControlHandlerEx::EnumDesktopWindows", GetLastError( ) );
-
-				return;
-			}
-
-			CloseWindowStation( hWinSta );
-			CloseDesktop( hDesktop );
-
-			output << g_WinMaxCount << " of " << g_WinCount;
-		}
-
-		WriteLog( const_cast<TCHAR *>( output.str( ).c_str( ) ) );
-
+		WriteLog( L"Device event" );
+		DeviceEventProc( dwEventType, lpEventData );
 		break;
 
 	case SERVICE_CONTROL_INTERROGATE:
