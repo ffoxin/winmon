@@ -1,6 +1,4 @@
-#ifdef _MSC_VER
-	#define _CRT_SECURE_NO_WARNINGS
-#endif
+#define _CRT_SECURE_NO_WARNINGS
 
 
 #include <Windows.h>
@@ -11,29 +9,26 @@
 #include "log.h"
 
 
-static	TCHAR	log_path[MAX_PATH]		= { };
-static	bool	first_call				= true;
-
-
 //==============================================================================
 //	LOG FILE
 //==============================================================================
 
 int WriteLog( const TCHAR *msg, const int error )
 {
+	static TCHAR		log_path[MAX_PATH]	= { };
+	static bool			first_call			= true;
+
 	std::wofstream		log;
 	TCHAR				date[9];
 	TCHAR				time[9];
 	LPTSTR				err_buf;
 
-	if( *log_path == 0 )
+	if( first_call )
 	{
 		if( !GetModuleFileName( 0, log_path, MAX_PATH ) )
 			return -1;
 
 		wcscpy( wcsrchr( log_path, L'.' ) + 1, L"log" );
-
-		//_wunlink( log_path );
 	}
 
 	log.open( log_path, std::ios::app );
@@ -42,17 +37,18 @@ int WriteLog( const TCHAR *msg, const int error )
 	
 	log.imbue( std::locale( "rus_rus" ) );
 
-	_wstrdate( date );
-	_wstrtime( time );
-
 	if( first_call )
 	{
 		first_call = false;
+
+		_wstrdate( date );
 		if( log.rdbuf( )->pubseekoff( 0, std::ios_base::end ) > 0 )
 			log << std :: endl;
-		log << "log started " << date << std::endl;
+
+		log << date << "\tlog started" << std::endl;
 	}
 
+	_wstrtime( time );
 	log << time << "\t";
 
 	if( error == 0 )
@@ -88,7 +84,10 @@ int WriteLog( const TCHAR *msg, const int error )
 
 int WriteConsoleLog( const TCHAR *msg, const int error )
 {
+	static bool			first_call	= true;
+
 	std::wstreambuf		*buf;
+	TCHAR				date[9];
 	TCHAR				time[9];
 	LPTSTR				err_buf;
 
@@ -96,8 +95,15 @@ int WriteConsoleLog( const TCHAR *msg, const int error )
 
 	std::wcout.imbue( std::locale( ".866" ) );
 
-	_wstrtime( time );
+	if( first_call )
+	{
+		first_call = false;
 
+		_wstrdate( date );
+		std::wcout << date << "\tlog started" << std::endl;
+	}
+
+	_wstrtime( time );
 	std::wcout << time << "\t";
 	
 	if( error == 0 )
@@ -122,8 +128,3 @@ int WriteConsoleLog( const TCHAR *msg, const int error )
 	
 	return 0;
 }
-
-
-#ifdef _MSC_VER
-	#undef _CRT_SECURE_NO_WARNINGS
-#endif
