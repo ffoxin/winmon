@@ -3,12 +3,15 @@
 #endif
 
 
+#pragma comment(lib, "..\\Debug\\log.lib" )
+
+
 #include <Windows.h>
 #include <fstream>
 #include <iostream>
 #include <tchar.h>
 
-#include "..\common\log.h"
+#include "..\log\log.h"
 
 
 using std::wcout;
