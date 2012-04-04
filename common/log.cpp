@@ -11,7 +11,37 @@
 #include "log.h"
 
 
-static TCHAR log_path[MAX_PATH];
+#ifndef IMPORT
+	#define IMPORT(type)		extern "C" __declspec(dllimport) type __stdcall
+#endif
+
+#ifndef _WINDEF_
+	#define MAX_PATH          260
+	typedef unsigned long DWORD;
+	typedef struct {
+		int unused;
+	} *HMODULE;
+#endif
+
+#ifdef UNICODE
+	#ifndef _TCHAR_DEFINED
+		typedef wchar_t TCHAR;
+	#endif
+	#ifndef GetModuleFileName
+	IMPORT(DWORD) GetModuleFileNameW( HMODULE hModule, const TCHAR lpFilename, DWORD nSize );
+	#define GetModuleFilName GetModuleFileNameW
+	#endif
+static	TCHAR	log_path[MAX_PATH];
+#else
+	#ifndef VOID
+		typedef char CHAR;
+	#endif
+	#ifndef GetModuleFileName
+	IMPORT(DWORD) GetModuleFileNameA( HMODULE hModule, const CHAR lpFilename, DWORD nSize );
+	#define GetModuleFilName GetModuleFileNameA
+	#endif
+static	CHAR	log_path[MAX_PATH];
+#endif
 
 
 //==============================================================================
