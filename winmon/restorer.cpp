@@ -6,8 +6,10 @@
 #include <Windows.h>
 #include <Dbt.h>
 
-#include "..\common\log.h"
+#include "..\log\log.h"
 #include "restorer.h"
+
+#pragma comment(lib, "..\\Debug\\log.lib")
 
 
 extern SERVICE_STATUS_HANDLE	g_ServiceStatusHandle;

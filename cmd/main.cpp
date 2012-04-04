@@ -29,8 +29,6 @@ size_t all = 0;
 
 int _tmain( int argc, TCHAR *argv[] )
 {
-	InitLog( true );
-
 	// get current station and desktop
 
 	HWINSTA	hWinStaNow		= GetProcessWindowStation( );

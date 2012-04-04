@@ -1,7 +1,9 @@
 #include <Windows.h>
 
-#include "..\common\log.h"
+#include "..\log\log.h"
 #include "scm.h"
+
+#pragma comment(lib, "..\\Debug\\log.lib")
 
 
 extern TCHAR			service_name[];

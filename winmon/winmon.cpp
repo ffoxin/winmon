@@ -17,10 +17,12 @@
 #include <Windows.h>
 #include <tchar.h>
 
-#include "..\common\log.h"
+#include "..\log\log.h"
 #include "scm.h"
 #include "service.h"
 #include "winmon.h"
+
+#pragma comment(lib, "..\\Debug\\log.lib")
 
 
 //==============================================================================
@@ -29,8 +31,6 @@
 
 void __cdecl _tmain( int argc, TCHAR *argv[] )
 {
-	InitLog( );
-
 	if( argc == 1 )
 	{
 		SERVICE_TABLE_ENTRY DispatchTable[] = 

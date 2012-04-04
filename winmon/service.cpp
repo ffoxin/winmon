@@ -4,9 +4,11 @@
 
 #include <Windows.h>
 
-#include "..\common\log.h"
+#include "..\log\log.h"
 #include "restorer.h"
 #include "service.h"
+
+#pragma comment(lib, "..\\Debug\\log.lib")
 
 
 extern TCHAR			*service_name;
