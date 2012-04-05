@@ -9,21 +9,35 @@
 #include "log.h"
 
 
+const TCHAR log_file[]		= L"Global\\{5F676F6C-6966-656C-0000-0000C64A7D4F}";
+const TCHAR log_console[]	= L"Global\\{5F676F6C-6F63-736E-6F6C-6500FB4A7D4F}";
+
+
+bool __stdcall FirstCall( const TCHAR *name )
+{
+	HANDLE mutex = CreateMutex( 0, FALSE, name );
+	int error = GetLastError( );
+	
+	return ( error != ERROR_ALREADY_EXISTS );
+}
+
+
 //==============================================================================
 //	LOG FILE
 //==============================================================================
 
-int WriteLog( const TCHAR *msg, const int error )
+
+int __stdcall WriteLog( const TCHAR *msg, const int error )
 {
 	static TCHAR		log_path[MAX_PATH]	= { };
-	static bool			first_call			= true;
+	static bool			first_call			= FirstCall( log_file );
 
 	std::wofstream		log;
 	TCHAR				date[9];
 	TCHAR				time[9];
 	LPTSTR				err_buf;
 
-	if( first_call )
+	if( !*log_path )
 	{
 		if( !GetModuleFileName( 0, log_path, MAX_PATH ) )
 			return -1;
@@ -82,9 +96,9 @@ int WriteLog( const TCHAR *msg, const int error )
 //	LOG CONSOLE
 //==============================================================================
 
-int WriteConsoleLog( const TCHAR *msg, const int error )
+int __stdcall WriteConsoleLog( const TCHAR *msg, const int error )
 {
-	static bool			first_call	= true;
+	static bool			first_call = FirstCall( log_console );
 
 	std::wstreambuf		*buf;
 	TCHAR				date[9];

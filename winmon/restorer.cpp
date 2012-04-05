@@ -1,15 +1,10 @@
-#ifdef _MSC_VER
-	#define _CRT_SECURE_NO_WARNINGS
-#endif
-
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <Windows.h>
 #include <Dbt.h>
 
 #include "..\log\log.h"
 #include "restorer.h"
-
-#pragma comment(lib, "..\\Debug\\log.lib")
 
 
 extern SERVICE_STATUS_HANDLE	g_ServiceStatusHandle;
@@ -78,8 +73,3 @@ BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
 
 	return TRUE;
 }
-
-
-#ifdef _MSC_VER
-	#undef _CRT_SECURE_NO_WARNINGS
-#endif

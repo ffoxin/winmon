@@ -10,9 +10,7 @@
  */
 
 
-#ifdef _MSC_VER
-	#define _CRT_SECURE_NO_WARNINGS
-#endif
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <Windows.h>
 #include <tchar.h>
@@ -61,8 +59,3 @@ void __cdecl _tmain( int argc, TCHAR *argv[] )
 		StopService( );
 	}
 }
-
-
-#ifdef _MSC_VER
-	#undef _CRT_SECURE_NO_WARNINGS
-#endif

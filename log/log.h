@@ -15,15 +15,14 @@
 //	Logging to file
 //==============================================================================
 
-int InitLog( bool clear = false );
-int WriteLog( const TCHAR *msg, const int error = 0 );
+int __stdcall WriteLog( const TCHAR *msg, const int error = 0 );
 
 
 //==============================================================================
 //	Logging to console
 //==============================================================================
 
-int WriteConsoleLog( const TCHAR *msg, const int error = 0 );
+int __stdcall WriteConsoleLog( const TCHAR *msg, const int error = 0 );
 
 
 #endif // LOG_H_1522_01042012

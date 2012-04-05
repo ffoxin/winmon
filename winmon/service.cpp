@@ -1,14 +1,8 @@
-#ifdef _MSC_VER
-	#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <Windows.h>
 
 #include "..\log\log.h"
 #include "restorer.h"
 #include "service.h"
-
-#pragma comment(lib, "..\\Debug\\log.lib")
 
 
 extern TCHAR			*service_name;
@@ -129,8 +123,3 @@ void UpdateServiceStatus( DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwW
 
 	SetServiceStatus( g_ServiceStatusHandle, &g_ServiceStatus );
 }
-
-
-#ifdef _MSC_VER
-	#undef _CRT_SECURE_NO_WARNINGS
-#endif

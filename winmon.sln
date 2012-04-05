@@ -2,8 +2,14 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winmon", "winmon\winmon.vcxproj", "{A6F2CF4D-0FC7-4C35-B034-2009350981FF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F3E8BCE7-6974-49DC-9522-654BDD78EFEA} = {F3E8BCE7-6974-49DC-9522-654BDD78EFEA}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmd", "cmd\cmd.vcxproj", "{79FCA13F-965B-44C4-A863-CF41EA3F3545}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F3E8BCE7-6974-49DC-9522-654BDD78EFEA} = {F3E8BCE7-6974-49DC-9522-654BDD78EFEA}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log", "log\log.vcxproj", "{F3E8BCE7-6974-49DC-9522-654BDD78EFEA}"
 EndProject
