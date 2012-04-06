@@ -15,7 +15,7 @@ int InstallService( )
 	SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_CREATE_SERVICE );
 	if( !hSCManager )
 	{
-		WriteLog( L"InstallService::OpenSCManager", GetLastError( ) );
+		WriteLogE( L"InstallService::OpenSCManager" );
 
 		return -1;
 	}
@@ -27,7 +27,7 @@ int InstallService( )
 
 	if( !hService )
 	{
-		WriteLog( L"InstallService::CreateService", GetLastError( ) );
+		WriteLogE( L"InstallService::CreateService" );
 		CloseServiceHandle( hSCManager );
 
 		return -1;
@@ -47,7 +47,7 @@ int RemoveService( )
 	SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ALL_ACCESS );
 	if( !hSCManager )
 	{
-		WriteLog( L"RemoveService::OpenSCManager", GetLastError( ) );
+		WriteLogE( L"RemoveService::OpenSCManager" );
 
 		return -1;
 	}
@@ -56,7 +56,7 @@ int RemoveService( )
 
 	if( !hService )
 	{
-		WriteLog( L"RemoveService::OpenService", GetLastError( ) );
+		WriteLogE( L"RemoveService::OpenService" );
 		CloseServiceHandle( hSCManager );
 
 		return -1;
@@ -78,7 +78,7 @@ int StartService( )
 	SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ENUMERATE_SERVICE );
 	if( !hSCManager )
 	{
-		WriteLog( L"StartService::OpenSCManager", GetLastError( ) );
+		WriteLogE( L"StartService::OpenSCManager" );
 
 		return -1;
 	}
@@ -87,7 +87,7 @@ int StartService( )
 
 	if( !hService )
 	{
-		WriteLog( L"StartService::OpenService", GetLastError( ) );
+		WriteLogE( L"StartService::OpenService" );
 		CloseServiceHandle( hSCManager );
 
 		return -1;
@@ -95,7 +95,7 @@ int StartService( )
 
 	if( !StartService( hService, 0, 0 ) )
 	{
-		WriteLog( L"StartService::StartService", GetLastError( ) );
+		WriteLogE( L"StartService::StartService" );
 		CloseServiceHandle( hService );
 		CloseServiceHandle( hSCManager );
 
@@ -124,7 +124,7 @@ int StopService( )
 	hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ENUMERATE_SERVICE );
 	if( !hSCManager )
 	{
-		WriteLog( L"StopService::OpenSCManager", GetLastError( ) );
+		WriteLogE( L"StopService::OpenSCManager" );
 
 		return -1;
 	}
@@ -132,19 +132,19 @@ int StopService( )
 	hService = OpenService( hSCManager, service_name, SERVICE_STOP | SERVICE_QUERY_STATUS );
 	if( !hService )
 	{
-		WriteLog( L"StopService::OpenService", GetLastError( ) );
+		WriteLogE( L"StopService::OpenService" );
 		CloseServiceHandle( hSCManager );
 
 		return -1;
 	}
 
 	if( !ControlService( hService, SERVICE_CONTROL_STOP, (LPSERVICE_STATUS) &ssp ) )
-		WriteLog( L"StopService::ControlService", GetLastError( ) );
+		WriteLogE( L"StopService::ControlService" );
 
 	if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, 
 		sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded ) )
 	{
-		WriteConsoleLog( L"StopService::QueryServiceStatusEx1", GetLastError( ) );
+		WriteLogE( L"StopService::QueryServiceStatusEx1" );
 		CloseServiceHandle( hService );
 		CloseServiceHandle( hSCManager );
 
@@ -170,7 +170,7 @@ int StopService( )
 		if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, 
 			sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded ) )
 		{
-			WriteConsoleLog( L"StopService::QueryServiceStatusEx2", GetLastError( ) );
+			WriteLogE( L"StopService::QueryServiceStatusEx2" );
 			CloseServiceHandle( hService );
 			CloseServiceHandle( hSCManager );
 

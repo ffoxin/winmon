@@ -39,7 +39,7 @@ void __cdecl _tmain( int argc, TCHAR *argv[] )
 
 		if( !StartServiceCtrlDispatcher( DispatchTable ) )
 		{
-			WriteLog( L"_tmain::StartServiceCtrlDispatcher", GetLastError( ) );
+			WriteLogE( L"_tmain::StartServiceCtrlDispatcher" );
 		}
 	}
 	else if( wcscmp( argv[argc - 1], L"install" ) == 0 )

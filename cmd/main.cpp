@@ -29,31 +29,34 @@ size_t all = 0;
 
 int _tmain( int argc, TCHAR *argv[] )
 {
+	HMODULE hModule = LoadLibrary( L"unknown.dll" );
+	WriteLogCE( !hModule );
+	WriteConsoleLogCE( !hModule );
+
 	// get current station and desktop
 
 	HWINSTA	hWinStaNow		= GetProcessWindowStation( );
-	if( !hWinStaNow )
-		WriteLog( L"_tmain::hWinStaNow", GetLastError( ) );
+	WriteLogC( !hWinStaNow );
 
 	HDESK	hDesktopNow		= GetThreadDesktop( GetCurrentThreadId( ) );
 	if( !hDesktopNow )
-		WriteLog( L"_tmain::hDesktopNow", GetLastError( ) );
+		WriteLogE( L"GetThreadDesktop" );
 
 	// get target station and desktop
 
 	HWINSTA hWinStaUser		= OpenWindowStation( L"WinSta0", FALSE, GENERIC_ALL );
 	if( !hWinStaUser )
-		WriteLog( L"_tmain::hWinStaUser", GetLastError( ) );
+		WriteLogE( L"OpenWindowStation" );
 
 	if( !SetProcessWindowStation( hWinStaUser ) )
-		WriteLog( L"_tmain::SetProcessWindowStation", GetLastError( ) );
+		WriteLogE( L"SetProcessWindowStation" );
 
 	HDESK	hDesktopUser	= OpenInputDesktop( 0, FALSE, GENERIC_ALL );
 	if( !hDesktopUser )
-		WriteLog( L"_tmain::hDesktopUser", GetLastError( ) );
+		WriteLogE( L"OpenInputDesktop" );
 
 	if( !SetThreadDesktop( hDesktopUser ) )
-		WriteLog( L"_tmain::SetThreadDesktop", GetLastError( ) );
+		WriteLogE( L"SetThreadDesktop" );
 
 	// process windows on target desktop
 

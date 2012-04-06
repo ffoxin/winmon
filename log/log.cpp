@@ -5,12 +5,14 @@
 #include <fstream>
 #include <iostream>
 #include <locale>
+#include <tchar.h>
 
 #include "log.h"
 
 
 const TCHAR log_file[]		= L"Global\\{5F676F6C-6966-656C-0000-0000C64A7D4F}";
 const TCHAR log_console[]	= L"Global\\{5F676F6C-6F63-736E-6F6C-6500FB4A7D4F}";
+const TCHAR tab[]			= L"\t";
 
 
 bool __stdcall FirstCall( const TCHAR *name )
@@ -26,8 +28,7 @@ bool __stdcall FirstCall( const TCHAR *name )
 //	LOG FILE
 //==============================================================================
 
-
-int __stdcall WriteLog( const TCHAR *msg, const int error )
+int __stdcall WriteLog( const TCHAR *msg, const int error, const TCHAR *location )
 {
 	static TCHAR		log_path[MAX_PATH]	= { };
 	static bool			first_call			= FirstCall( log_file );
@@ -59,23 +60,24 @@ int __stdcall WriteLog( const TCHAR *msg, const int error )
 		if( log.rdbuf( )->pubseekoff( 0, std::ios_base::end ) > 0 )
 			log << std :: endl;
 
-		log << date << "\tlog started" << std::endl;
+		log << date << tab << L"log started" << std::endl;
 	}
 
 	_wstrtime( time );
-	log << time << "\t";
-
+	log << time << tab;
+	
 	if( error == 0 )
 	{
-		log << msg << std::endl;
+		log << msg;
 	}
 	else
 	{
-		if( !FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 
+		if( !FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 
 			0, error, MAKELANGID( LANG_NEUTRAL, SUBLANG_SYS_DEFAULT ), (LPTSTR) &err_buf, 0, 0 ) )
 			return GetLastError( );
-
-		log << "Error: " << msg << "\t" << "(" << error << ") " << err_buf;
+		log << L"Error: " << msg << tab << 
+			L"(" << error << L") " << 
+			err_buf << tab << location;
 		LocalFree( err_buf );
 	}
 
@@ -83,9 +85,10 @@ int __stdcall WriteLog( const TCHAR *msg, const int error )
 	{
 		log.close( );
 		log.open( log_path, std::ios::app );
-		log << std::endl;
 	}
 	
+	log << std::endl;
+
 	log.close( );
 
 	return 0;
@@ -96,7 +99,7 @@ int __stdcall WriteLog( const TCHAR *msg, const int error )
 //	LOG CONSOLE
 //==============================================================================
 
-int __stdcall WriteConsoleLog( const TCHAR *msg, const int error )
+int __stdcall WriteConsoleLog( const TCHAR *msg, const int error, const TCHAR *location )
 {
 	static bool			first_call = FirstCall( log_console );
 
@@ -118,27 +121,29 @@ int __stdcall WriteConsoleLog( const TCHAR *msg, const int error )
 	}
 
 	_wstrtime( time );
-	std::wcout << time << "\t";
+	std::wcout << time << tab;
 	
 	if( error == 0 )
 	{
-		std::wcout << msg << std::endl;
+		std::wcout << msg;
 	}
 	else
 	{
-		if( !FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 
+		if( !FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 
 			0, error, MAKELANGID( LANG_NEUTRAL, SUBLANG_SYS_DEFAULT ), (LPTSTR) &err_buf, 0, 0 ) )
 			return GetLastError( );
-
-		std::wcout << time << "\t" << L"Error: " << msg << L"\t" << "(" << error << ") " << err_buf;
+		std::wcout << L"Error: " << msg << tab << 
+			L"(" << error << L") " << 
+			err_buf << tab << location;
 		LocalFree( err_buf );
 	}
 
 	if( std::wcout.fail( ) )
 	{
 		std::wcout.rdbuf( buf );
-		std::wcout << std::endl;
 	}
-	
+
+	std::wcout << std::endl;
+
 	return 0;
 }
