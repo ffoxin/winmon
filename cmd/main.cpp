@@ -30,13 +30,13 @@ size_t all = 0;
 int _tmain( int argc, TCHAR *argv[] )
 {
 	HMODULE hModule = LoadLibrary( L"unknown.dll" );
-	WriteLogCE( !hModule );
-	WriteConsoleLogCE( !hModule );
+	WriteLogE( L"LoadLibrary" );
+	WriteConsoleLogE( L"LoadLibrary" );
 
 	// get current station and desktop
 
 	HWINSTA	hWinStaNow		= GetProcessWindowStation( );
-	WriteLogC( !hWinStaNow );
+	WriteLogE( L"GetProcessWindowStation" );
 
 	HDESK	hDesktopNow		= GetThreadDesktop( GetCurrentThreadId( ) );
 	if( !hDesktopNow )

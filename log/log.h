@@ -23,14 +23,8 @@
 #define __WFILELINE__ __WFILE__ __WCOLON__ __WLINE__
 		
 #define WriteLogE(x)			WriteLog( x, GetLastError( ), __WFILELINE__ )
-#define WriteLogP(x)			WriteLog( WSTR( #x ), GetLastError( ), __WFILELINE__ )
-#define WriteLogC(x)			if( x ) WriteLog( WSTR(#x) )
-#define WriteLogCE(x)			if( x ) WriteLogP( x )
 
 #define WriteConsoleLogE(x)		WriteConsoleLog( x, GetLastError( ), __WFILELINE__ )
-#define WriteConsoleLogP(x)		WriteConsoleLog( WSTR( #x ), GetLastError( ), __WFILELINE__ )
-#define WriteConsoleLogC(x)		if( x ) WriteConsoleLog( WSTR(#x) )
-#define WriteConsoleLogCE(x)	if( x ) WriteConsoleLogP( x )
 
 
 //==============================================================================
