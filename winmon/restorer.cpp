@@ -30,7 +30,7 @@ void DeviceEventProc( DWORD dwEventType, LPVOID lpEventData )
 {
 	PDEV_BROADCAST_HDR				dev_hdr;
 	PDEV_BROADCAST_DEVICEINTERFACE	dev_int;
-		
+
 	dev_hdr = (PDEV_BROADCAST_HDR) lpEventData;
 	if( dev_hdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE )
 		dev_int = (PDEV_BROADCAST_DEVICEINTERFACE) dev_hdr;
@@ -46,11 +46,25 @@ void DeviceEventProc( DWORD dwEventType, LPVOID lpEventData )
 
 	if( wcsstr( dev_int->dbcc_name, detect_token ) != 0 )
 	{
-		TCHAR	buf[MAX_PATH];
+		TCHAR					buf[MAX_PATH];
+		TCHAR					module[MAX_PATH];
+		TCHAR					params[MAX_PATH];
+		STARTUPINFO				si;
+		PROCESS_INFORMATION		pi;
 
 		wcscpy( buf, L"Token detected: " );
 		wcscat( buf, detect_token );
 		WriteLog( buf );
+
+		GetModuleFileName( 0, module, MAX_PATH );
+		wcscpy( params, module );
+		wcscat( params, L" fix" );
+
+		memset( &si, 0, sizeof( si ) );
+		si.cb = sizeof( si );
+		memset( &pi, 0, sizeof( pi ) );
+
+		CreateProcess( module, L"fix", 0, 0, FALSE, NORMAL_PRIORITY_CLASS, 0, 0, &si, &pi );
 	}
 }
 
@@ -72,4 +86,9 @@ BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
 	}
 
 	return TRUE;
+}
+
+void FixWindows( )
+{
+	EnumWindows( EnumWindowsProc, 0 );
 }

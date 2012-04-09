@@ -29,48 +29,32 @@ size_t all = 0;
 
 int _tmain( int argc, TCHAR *argv[] )
 {
-	HMODULE hModule = LoadLibrary( L"unknown.dll" );
-	WriteLogE( L"LoadLibrary" );
-	WriteConsoleLogE( L"LoadLibrary" );
+	if( argc == 3 )
+	{
+		TCHAR					module[MAX_PATH];
+		TCHAR					params[MAX_PATH];
+		STARTUPINFO				si;
+		PROCESS_INFORMATION		pi;
 
-	// get current station and desktop
+		GetModuleFileName( 0, module, MAX_PATH );
+		wcscpy( params, module );
+		wcscat( params, L" fix" );
+		memset( &si, 0, sizeof( si ) );
+		si.cb = sizeof( si );
+		memset( &pi, 0, sizeof( pi ) );
 
-	HWINSTA	hWinStaNow		= GetProcessWindowStation( );
-	WriteLogE( L"GetProcessWindowStation" );
-
-	HDESK	hDesktopNow		= GetThreadDesktop( GetCurrentThreadId( ) );
-	if( !hDesktopNow )
-		WriteLogE( L"GetThreadDesktop" );
-
-	// get target station and desktop
-
-	HWINSTA hWinStaUser		= OpenWindowStation( L"WinSta0", FALSE, GENERIC_ALL );
-	if( !hWinStaUser )
-		WriteLogE( L"OpenWindowStation" );
-
-	if( !SetProcessWindowStation( hWinStaUser ) )
-		WriteLogE( L"SetProcessWindowStation" );
-
-	HDESK	hDesktopUser	= OpenInputDesktop( 0, FALSE, GENERIC_ALL );
-	if( !hDesktopUser )
-		WriteLogE( L"OpenInputDesktop" );
-
-	if( !SetThreadDesktop( hDesktopUser ) )
-		WriteLogE( L"SetThreadDesktop" );
-
-	// process windows on target desktop
-
-	EnumWindows( EnumWindowsProc, 0 );
-
-	// restore station and desktop
-
-	SetProcessWindowStation( hWinStaNow );
-	SetThreadDesktop( hDesktopNow );
-
-	// finilize
-
-	CloseDesktop( hDesktopUser );
-	CloseWindowStation( hWinStaUser );
+		WriteLog( L"create new process" );
+		CreateProcess( module, params, 0, 0, FALSE, NORMAL_PRIORITY_CLASS, 0, 0, &si, &pi );
+	}
+	else if( argc == 2 )
+	{
+		WriteLog( L"started" );
+		Sleep( 50000 );
+	}
+	else
+	{
+		WriteLog( L"do nothing" );
+	}
 
 	return 0;
 }

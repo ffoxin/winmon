@@ -11,7 +11,6 @@
 
 
 const TCHAR log_file[]		= L"Global\\{5F676F6C-6966-656C-0000-0000C64A7D4F}";
-const TCHAR log_console[]	= L"Global\\{5F676F6C-6F63-736E-6F6C-6500FB4A7D4F}";
 const TCHAR tab[]			= L"\t";
 
 
@@ -101,24 +100,13 @@ int __stdcall WriteLog( const TCHAR *msg, const int error, const TCHAR *location
 
 int __stdcall WriteConsoleLog( const TCHAR *msg, const int error, const TCHAR *location )
 {
-	static bool			first_call = FirstCall( log_console );
-
 	std::wstreambuf		*buf;
-	TCHAR				date[9];
 	TCHAR				time[9];
 	LPTSTR				err_buf;
 
 	buf = std::wcout.rdbuf( );
 
 	std::wcout.imbue( std::locale( ".866" ) );
-
-	if( first_call )
-	{
-		first_call = false;
-
-		_wstrdate( date );
-		std::wcout << date << "\tlog started" << std::endl;
-	}
 
 	_wstrtime( time );
 	std::wcout << time << tab;

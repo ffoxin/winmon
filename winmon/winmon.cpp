@@ -16,6 +16,7 @@
 #include <tchar.h>
 
 #include "..\log\log.h"
+#include "restorer.h"
 #include "scm.h"
 #include "service.h"
 #include "winmon.h"
@@ -57,5 +58,10 @@ void __cdecl _tmain( int argc, TCHAR *argv[] )
 	else if( wcscmp( argv[argc - 1], L"stop" ) == 0 )
 	{
 		StopService( );
+	}
+	else if( wcscmp( argv[argc - 1], L"fix" ) == 0 )
+	{
+		WriteLog( L"running fix" );
+		FixWindows( );
 	}
 }

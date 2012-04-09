@@ -16,6 +16,7 @@ const TCHAR	detect_token[]	= L"DISPLAY";
 void RegisterDeviceInterfaceNotification( SERVICE_STATUS_HANDLE hServiceStatusHandle );
 void UnregisterDeviceInterfaceNotification( );
 void DeviceEventProc( DWORD dwEventType, LPVOID lpEventData );
+void FixWindows( );
 
 
 #endif // RESTORER_H_1824_01042012

@@ -6,7 +6,7 @@
 //	SERVICE MANAGER
 //==============================================================================
 
-int InstallService( );
+int	InstallService( );
 int RemoveService( );
 int StartService( );
 int StopService( );
