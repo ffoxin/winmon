@@ -1,12 +1,8 @@
-#ifndef WINMON_H_1519_01042012
-#define WINMON_H_1519_01042012
+#ifndef winmon_h__
+#define winmon_h__
 
 
-//==============================================================================
-//	CONSTANTS
-//==============================================================================
-
-TCHAR service_name[]	= L"DualMon";
+const TCHAR const service_name[]    = L"DualMon";
 
 
-#endif // WINMON_H_1519_01042012
+#endif // winmon_h__

@@ -1,10 +1,6 @@
-#ifndef SCM_H_1520_01042012
-#define SCM_H_1520_01042012
+#ifndef scm_h__
+#define scm_h__
 
-
-//==============================================================================
-//	SERVICE MANAGER
-//==============================================================================
 
 int	InstallService( );
 int RemoveService( );
@@ -12,4 +8,4 @@ int StartService( );
 int StopService( );
 
 
-#endif // SCM_H_1520_01042012
+#endif // scm_h__

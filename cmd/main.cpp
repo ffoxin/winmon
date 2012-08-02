@@ -29,7 +29,7 @@ size_t all = 0;
 
 int _tmain( int argc, TCHAR *argv[] )
 {
-	if( argc == 3 )
+	/*if( argc == 3 )
 	{
 		TCHAR					module[MAX_PATH];
 		TCHAR					params[MAX_PATH];
@@ -54,8 +54,9 @@ int _tmain( int argc, TCHAR *argv[] )
 	else
 	{
 		WriteLog( L"do nothing" );
-	}
+	}*/
 
+	EnumWindows( EnumWindowsProc, 0 );
 	return 0;
 }
 
@@ -74,10 +75,10 @@ BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
 		max++;
 		WriteLog( title );
 		WriteConsoleLog( title );
-		/*wp.showCmd = SW_SHOWNORMAL;
+		wp.showCmd = SW_SHOWNORMAL;
 		SetWindowPlacement( hWnd, &wp );
 		wp.showCmd = SW_MAXIMIZE;
-		SetWindowPlacement( hWnd, &wp );*/
+		SetWindowPlacement( hWnd, &wp );
 	}
 
 	return TRUE;

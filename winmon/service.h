@@ -1,12 +1,8 @@
-#ifndef SERVICE_H_1521_01042012
-#define SERVICE_H_1521_01042012
+#ifndef service_h__
+#define service_h__
 
-
-//==============================================================================
-//	SERVICE
-//==============================================================================
 
 void ServiceMain( DWORD dwArgc, LPTSTR *lpszArgv );
 
 
-#endif // SERVICE_H_1521_01042012
+#endif // service_h__

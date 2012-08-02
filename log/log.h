@@ -1,13 +1,17 @@
-#ifndef LOG_H_1522_01042012
-#define LOG_H_1522_01042012
+#ifndef log_h_1522_01042012
+#define log_h_1522_01042012
 
 
-#ifndef _TCHAR_DEFINED
+#ifdef _MSC_VER
+#include <tchar.h>
+#else
+  #ifndef _TCHAR_DEFINED
 	#ifdef UNICODE
-		typedef	wchar_t	TCHAR;
+	  typedef	wchar_t	TCHAR;
 	#else
-		typedef	char	TCHAR;
+	  typedef	char	TCHAR;
 	#endif
+#endif
 #endif
 
 #define WINT(x) L## #x
@@ -41,4 +45,4 @@ int __stdcall WriteLog( const TCHAR *msg, const int error = 0, const TCHAR *loca
 int __stdcall WriteConsoleLog( const TCHAR *msg, const int error = 0, const TCHAR *location = 0 );
 
 
-#endif // LOG_H_1522_01042012
+#endif // log_h_1522_01042012

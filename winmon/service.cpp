@@ -13,7 +13,7 @@ HANDLE                  g_ServiceStopEvent = 0;
 
 
 //==============================================================================
-//	FUNCTION DEFINITIONS
+//	Declarations
 //==============================================================================
 
 void InitService( DWORD dwArgc, LPTSTR *lpszArgv );
@@ -22,104 +22,104 @@ void UpdateServiceStatus( DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwW
 
 
 //==============================================================================
-//	MAIN
+//	Service entry point
 //==============================================================================
 
 void ServiceMain( DWORD dwArgc, LPTSTR *lpszArgv )
 {
-	g_ServiceStatusHandle = RegisterServiceCtrlHandlerEx( 
-		service_name, (LPHANDLER_FUNCTION_EX) ControlHandlerEx, 0 );
+    g_ServiceStatusHandle = RegisterServiceCtrlHandlerEx( 
+        service_name, (LPHANDLER_FUNCTION_EX) ControlHandlerEx, 0 );
 
-	if( g_ServiceStatusHandle == 0 )
-		return;
-	
-	g_ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
-	g_ServiceStatus.dwServiceSpecificExitCode = 0;
-	g_ServiceStatus.dwControlsAccepted =	SERVICE_ACCEPT_STOP | 
-											SERVICE_ACCEPT_SHUTDOWN | 
-											SERVICE_ACCEPT_HARDWAREPROFILECHANGE;
+    if( g_ServiceStatusHandle == 0 )
+        return;
 
-	RegisterDeviceInterfaceNotification( g_ServiceStatusHandle );
+    g_ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS;
+    g_ServiceStatus.dwServiceSpecificExitCode = 0;
+    g_ServiceStatus.dwControlsAccepted =	SERVICE_ACCEPT_STOP | 
+        SERVICE_ACCEPT_SHUTDOWN | 
+        SERVICE_ACCEPT_HARDWAREPROFILECHANGE;
 
-	UpdateServiceStatus( SERVICE_START_PENDING, NO_ERROR, 3000 );
+    RegisterDeviceInterfaceNotification( g_ServiceStatusHandle );
 
-	InitService( dwArgc, lpszArgv );
+    UpdateServiceStatus( SERVICE_START_PENDING, NO_ERROR, 3000 );
+
+    InitService( dwArgc, lpszArgv );
 }
 
 void InitService( DWORD dwArgc, LPTSTR *lpszArgv )
 {
-	g_ServiceStopEvent = CreateEvent( 0, TRUE, FALSE, 0 );
+    g_ServiceStopEvent = CreateEvent( 0, TRUE, FALSE, 0 );
 
-	if( !g_ServiceStopEvent )
-	{
-		UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
-		return;
-	}
+    if( !g_ServiceStopEvent )
+    {
+        UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
+        return;
+    }
 
-	UpdateServiceStatus( SERVICE_RUNNING, NO_ERROR, 0 );
+    UpdateServiceStatus( SERVICE_RUNNING, NO_ERROR, 0 );
 
-	while( true )
-	{
-		WaitForSingleObject( g_ServiceStopEvent, INFINITE );
-		UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
-		return;
-	}
+    while( true )
+    {
+        WaitForSingleObject( g_ServiceStopEvent, INFINITE );
+        UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
+        return;
+    }
 }
 
 void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext )
 {
-	switch( dwControl )
-	{
+    switch( dwControl )
+    {
 
-	case SERVICE_CONTROL_STOP:
-		UnregisterDeviceInterfaceNotification( );
+    case SERVICE_CONTROL_STOP:
+        UnregisterDeviceInterfaceNotification( );
 
-		UpdateServiceStatus( SERVICE_STOP_PENDING, NO_ERROR, 0 );
+        UpdateServiceStatus( SERVICE_STOP_PENDING, NO_ERROR, 0 );
 
-		SetEvent( g_ServiceStopEvent );
-		UpdateServiceStatus( g_ServiceStatus.dwCurrentState, NO_ERROR, 0 );
+        SetEvent( g_ServiceStopEvent );
+        UpdateServiceStatus( g_ServiceStatus.dwCurrentState, NO_ERROR, 0 );
 
-		WriteLog( L"Stopping" );
-		break;
+        WriteLog( L"Stopping" );
+        break;
 
-	case SERVICE_CONTROL_SHUTDOWN:
-		UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
-		WriteLog( L"Shutdown" );
-		break;
+    case SERVICE_CONTROL_SHUTDOWN:
+        UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
+        WriteLog( L"Shutdown" );
+        break;
 
-	case SERVICE_CONTROL_HARDWAREPROFILECHANGE:
-		WriteLog( L"Hardware profile changed notification" );
-		break;
+    case SERVICE_CONTROL_HARDWAREPROFILECHANGE:
+        WriteLog( L"Hardware profile changed notification" );
+        break;
 
-	case SERVICE_CONTROL_DEVICEEVENT:
-		WriteLog( L"Device event" );
-		DeviceEventProc( dwEventType, lpEventData );
-		break;
+    case SERVICE_CONTROL_DEVICEEVENT:
+        WriteLog( L"Device event" );
+        DeviceEventProc( dwEventType, lpEventData );
+        break;
 
-	case SERVICE_CONTROL_INTERROGATE:
-		break;
+    case SERVICE_CONTROL_INTERROGATE:
+        break;
 
-	default:
-		break;
+    default:
+        break;
 
-	}
+    }
 }
 
 void UpdateServiceStatus( DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint )
 {
-	g_ServiceStatus.dwCurrentState = dwCurrentState;
-	g_ServiceStatus.dwWin32ExitCode = dwWin32ExitCode;
-	g_ServiceStatus.dwWaitHint;
+    g_ServiceStatus.dwCurrentState = dwCurrentState;
+    g_ServiceStatus.dwWin32ExitCode = dwWin32ExitCode;
+    g_ServiceStatus.dwWaitHint;
 
-	if( dwCurrentState == SERVICE_START_PENDING )
-		g_ServiceStatus.dwControlsAccepted = 0;
-	else
-		g_ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+    if( dwCurrentState == SERVICE_START_PENDING )
+        g_ServiceStatus.dwControlsAccepted = 0;
+    else
+        g_ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 
-	if( dwCurrentState & ( SERVICE_RUNNING | SERVICE_STOPPED ) )
-		g_ServiceStatus.dwCheckPoint = 0;
-	else
-		g_ServiceStatus.dwCheckPoint++;
+    if( dwCurrentState & ( SERVICE_RUNNING | SERVICE_STOPPED ) )
+        g_ServiceStatus.dwCheckPoint = 0;
+    else
+        g_ServiceStatus.dwCheckPoint++;
 
-	SetServiceStatus( g_ServiceStatusHandle, &g_ServiceStatus );
+    SetServiceStatus( g_ServiceStatusHandle, &g_ServiceStatus );
 }
