@@ -22,11 +22,9 @@ bool __stdcall FirstCall( const TCHAR *name )
     return ( error != ERROR_ALREADY_EXISTS );
 }
 
-
-//==============================================================================
-//  LOG FILE
-//==============================================================================
-
+/************************************************************************/
+/* Log file                                                                     */
+/************************************************************************/
 int __stdcall WriteLog( const TCHAR *msg, const int error, const TCHAR *location )
 {
     static TCHAR        log_path[MAX_PATH]  = { };

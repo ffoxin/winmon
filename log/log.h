@@ -2,47 +2,36 @@
 #define log_h_1522_01042012
 
 
-#ifdef _MSC_VER
 #include <tchar.h>
-#else
-  #ifndef _TCHAR_DEFINED
-	#ifdef UNICODE
-	  typedef	wchar_t	TCHAR;
-	#else
-	  typedef	char	TCHAR;
-	#endif
-#endif
-#endif
 
-#define WINT(x) L## #x
-#define TOWINT(x) WINT(x)
-#define __WLINE__ TOWINT(__LINE__)
-
-#define WSTR(x) L ## x
-#define TOWSTR(x) WSTR(x)
-#define __WFILE__ TOWSTR(__FILE__)
-
-#define __WCOLON__ L":"
-
-#define __WFILELINE__ __WFILE__ __WCOLON__ __WLINE__
-		
-#define WriteLogE(x)			WriteLog( x, GetLastError( ), __WFILELINE__ )
-
-#define WriteConsoleLogE(x)		WriteConsoleLog( x, GetLastError( ), __WFILELINE__ )
+#include "log_macro.h"
 
 
-//==============================================================================
-//	Logging to file
-//==============================================================================
+/************************************************************************/
+/* Log types                                                                     */
+/************************************************************************/
+enum e_LogType_t { e_Info, e_Warning, e_Error, e_LogTypeCount };
+enum e_LogTarget_t { e_Console, e_File, e_LogTargetCount };
 
-int __stdcall WriteLog( const TCHAR *msg, const int error = 0, const TCHAR *location = 0 );
+/************************************************************************/
+/* Log settings                                                                     */
+/************************************************************************/
+/************************************************************************/
+/*          | Console   | File
+ * Info     |   +       |   -
+ * Warning  |   +       |   -
+ * Error    |   +       |   +   */
+/************************************************************************/
+bool write_settings[e_LogTypeCount][e_LogTargetCount] = {
+    { true, false },
+    { true, false },
+    { true, true }
+};
 
-
-//==============================================================================
-//	Logging to console
-//==============================================================================
-
-int __stdcall WriteConsoleLog( const TCHAR *msg, const int error = 0, const TCHAR *location = 0 );
+/************************************************************************/
+/* Write log                                                                     */
+/************************************************************************/
+int WINAPI WriteLog(const TCHAR *message, e_LogType_t log_type = e_Info, int error_code = 0);
 
 
 #endif // log_h_1522_01042012

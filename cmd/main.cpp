@@ -1,6 +1,4 @@
-#ifdef _MSC_VER
-	#define _CRT_SECURE_NO_WARNINGS
-#endif
+#define _CRT_SECURE_NO_WARNINGS
 
 
 #pragma comment(lib, "..\\Debug\\log.lib" )
@@ -14,22 +12,9 @@
 #include "..\log\log.h"
 
 
-using std::wcout;
-using std::wcin;
-using std::endl;
-
-
-BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam );
-BOOL CALLBACK EnumDesktopProc( LPTSTR lpszDesktop, LPARAM lParam );
-BOOL CALLBACK EnumWindowStationProc( LPTSTR lpszWindowStation, LPARAM lParam );
-
-
-size_t max = 0;
-size_t all = 0;
-
 int _tmain( int argc, TCHAR *argv[] )
 {
-	/*if( argc == 3 )
+	if( argc == 3 )
 	{
 		TCHAR					module[MAX_PATH];
 		TCHAR					params[MAX_PATH];
@@ -54,37 +39,7 @@ int _tmain( int argc, TCHAR *argv[] )
 	else
 	{
 		WriteLog( L"do nothing" );
-	}*/
-
-	EnumWindows( EnumWindowsProc, 0 );
-	return 0;
-}
-
-BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
-{
-	WINDOWPLACEMENT		wp;
-	TCHAR				title[MAX_PATH];
-
-	all++;
-
-	GetWindowText( hWnd, title, MAX_PATH );
-	GetWindowPlacement( hWnd, &wp );
-
-	if( wp.showCmd == SW_MAXIMIZE )
-	{
-		max++;
-		WriteLog( title );
-		WriteConsoleLog( title );
-		wp.showCmd = SW_SHOWNORMAL;
-		SetWindowPlacement( hWnd, &wp );
-		wp.showCmd = SW_MAXIMIZE;
-		SetWindowPlacement( hWnd, &wp );
 	}
 
-	return TRUE;
+	return 0;
 }
-
-
-#ifdef _MSC_VER
-	#undef _CRT_SECURE_NO_WARNINGS
-#endif
