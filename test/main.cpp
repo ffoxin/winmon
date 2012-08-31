@@ -1,19 +1,23 @@
 #include <stdio.h>
 
-#define __ITOS2__(x) #x
-#define __ITOS__(x) __ITOS2__(x)
-#define __DLINE__ __ITOS__(__LINE__)
 
-#define __TEST__ (__FILE__ ":" __DLINE__)
+const char *msg1( )
+{
+    static char msg[256] = { };
+    static int counter = 0;
 
+    sprintf( msg, "value is %d", ++counter );
 
-
+    return msg;
+}
 
 int main(int argc, char **argv)
 {
-    printf("%s\n", __FILE__);
-    printf("%d\n", __LINE__);
-    printf("%s\n", __TEST__);
+    for( size_t i = 0; i < 10; ++i )
+    {
+        const char *msg = msg1( );
+        printf( "%s\n", msg );
+    }
 
     return 0;
 }

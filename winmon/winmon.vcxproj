@@ -77,12 +77,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="restorer.cpp" />
     <ClCompile Include="scm.cpp" />
     <ClCompile Include="service.cpp" />
     <ClCompile Include="winmon.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="log.h" />
     <ClInclude Include="restorer.h" />
     <ClInclude Include="scm.h" />
     <ClInclude Include="service.h" />
