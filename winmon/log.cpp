@@ -154,7 +154,7 @@ int WINAPI Log( const TCHAR *msg )
     {
         is_started = true;
 
-        _wstrdate( date );
+        // check if log file already have any content
         if( log.rdbuf( )->pubseekoff( 0, std::ios_base::end ) > 0 )
         {
             log << std::endl;
@@ -191,4 +191,9 @@ int WINAPI Log( const TCHAR *msg )
     log.close( );
 
     return 0;
+}
+
+int WINAPI LogError( const TCHAR *msg, int error_code )
+{
+
 }
