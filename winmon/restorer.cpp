@@ -2,10 +2,14 @@
 
 #include <Windows.h>
 #include <Dbt.h>
+#include <UserEnv.h>
+#include <WtsApi32.h>
 
-#include "..\log\log.h"
+#include "log.h"
 #include "restorer.h"
 
+#pragma comment(lib, "Userenv.lib")
+#pragma comment(lib, "Wtsapi32.lib")
 
 extern SERVICE_STATUS_HANDLE	g_ServiceStatusHandle;
 static HDEVNOTIFY				g_DeviceInterfaceNotification;
@@ -13,6 +17,8 @@ static HDEVNOTIFY				g_DeviceInterfaceNotification;
 
 void RegisterDeviceInterfaceNotification( SERVICE_STATUS_HANDLE hServiceStatusHandle )
 {
+	hServiceStatusHandle;
+
     DEV_BROADCAST_DEVICEINTERFACE dev_int;
     dev_int.dbcc_size			= sizeof( DEV_BROADCAST_DEVICEINTERFACE );
     dev_int.dbcc_devicetype		= DBT_DEVTYP_DEVICEINTERFACE;
@@ -26,6 +32,14 @@ void UnregisterDeviceInterfaceNotification( )
     UnregisterDeviceNotification( g_DeviceInterfaceNotification );
 }
 
+void ReleaseEnv( HANDLE hToken, HANDLE hTokenDup, LPVOID pEnv )
+{
+	DestroyEnvironmentBlock( pEnv );
+
+	CloseHandle( hToken );
+	CloseHandle( hTokenDup );
+}
+
 void DeviceEventProc( DWORD dwEventType, LPVOID lpEventData )
 {
     PDEV_BROADCAST_HDR				dev_hdr;
@@ -37,39 +51,75 @@ void DeviceEventProc( DWORD dwEventType, LPVOID lpEventData )
     else
         return;
 
-    WriteLog( L"Event type: DeviceInterface" );
+    Log( _T("Event type: DeviceInterface") );
 
     if( !( dwEventType & ( DBT_DEVICEARRIVAL | DBT_DEVICEREMOVECOMPLETE ) ) )
         return;
 
-    WriteLog( L"Detect device change" );
+    Log( _T("Detect device change") );
+	Log( dev_int->dbcc_name );
 
-    if( wcsstr( dev_int->dbcc_name, detect_token ) != 0 )
+    if( _tcsstr( dev_int->dbcc_name, detect_token ) != 0 )
     {
-        TCHAR					buf[MAX_PATH];
-        TCHAR					module[MAX_PATH];
-        TCHAR					params[MAX_PATH];
-        STARTUPINFO				si;
-        PROCESS_INFORMATION		pi;
+        TCHAR	cmdline[MAX_PATH];
 
-        wcscpy( buf, L"Token detected: " );
-        wcscat( buf, detect_token );
-        WriteLog( buf );
+        GetModuleFileName( 0, cmdline, MAX_PATH );
+        _tcscat( cmdline, _T(" fix") );
 
-        GetModuleFileName( 0, module, MAX_PATH );
-        wcscpy( params, module );
-        wcscat( params, L" fix" );
+		// new code 
+		HANDLE hToken = 0;
+		LPVOID pEnv = 0;
 
-        memset( &si, 0, sizeof( si ) );
-        si.cb = sizeof( si );
-        memset( &pi, 0, sizeof( pi ) );
+		// get the ID of the current active Windows session at the console
+		DWORD dwSessionId = WTSGetActiveConsoleSessionId( );
+		if( dwSessionId == 0xFFFFFFFF )
+		{
+			Log( _T("WTSGetActiveConsoleSessionId failed") );
+			return;
+		}
 
-        CreateProcess( module, L"fix", 0, 0, FALSE, NORMAL_PRIORITY_CLASS, 0, 0, &si, &pi );
+		// get the token for that session
+		if( !WTSQueryUserToken( dwSessionId, &hToken ) )
+		{
+			Log( _T("WTSQueryUserToken"), GetLastError( ) );
+			return;
+		}
+
+		// create an environment that will be passing to the process
+		STARTUPINFO si;
+		ZeroMemory( &si, sizeof( STARTUPINFO ) );
+		si.cb = sizeof( STARTUPINFO );
+		si.lpDesktop = _T("winsta0\\default");
+
+		DWORD dwCreationFlag = NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW;
+
+		if( !CreateEnvironmentBlock( &pEnv, hToken, FALSE ) )
+		{
+			Log( _T("CreateEnvironmentBlock"), GetLastError( ) );
+			CloseHandle( hToken );
+			return;
+		}
+
+		// use CreateProcessAsUser with the user token and the created environment
+		PROCESS_INFORMATION pi;
+		ZeroMemory( &pi, sizeof( PROCESS_INFORMATION ) );
+		
+		Log( _T("Call CreateProcessAsUser") );
+		if( !CreateProcessAsUser( hToken, 0, cmdline, 0, 0, FALSE, dwCreationFlag, pEnv, 0, &si, &pi ) )
+		{
+			Log( _T("CreateProcessAsUser"), GetLastError( ) );
+		}
+
+		// release captured resources
+		DestroyEnvironmentBlock( pEnv );
+		CloseHandle( hToken );
     }
 }
 
 BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
 {
+	lParam;
+
     WINDOWPLACEMENT		wp;
     TCHAR				title[MAX_PATH];
 
@@ -78,11 +128,11 @@ BOOL CALLBACK EnumWindowsProc( HWND hWnd, LPARAM lParam )
 
     if( wp.showCmd == SW_MAXIMIZE )
     {
-        WriteLog( title );
-        /*wp.showCmd = SW_SHOWNORMAL;
-        SetWindowPlacement( hWnd, &wp );
-        wp.showCmd = SW_MAXIMIZE;
-        SetWindowPlacement( hWnd, &wp );*/
+        //Log( title );
+		wp.showCmd = SW_SHOWNORMAL;
+		SetWindowPlacement( hWnd, &wp );
+		wp.showCmd = SW_MAXIMIZE;
+		SetWindowPlacement( hWnd, &wp );
     }
 
     return TRUE;

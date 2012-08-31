@@ -1,6 +1,6 @@
 #include <Windows.h>
 
-#include "..\log\log.h"
+#include "log.h"
 #include "restorer.h"
 #include "service.h"
 
@@ -12,19 +12,17 @@ SERVICE_STATUS_HANDLE	g_ServiceStatusHandle;
 HANDLE                  g_ServiceStopEvent = 0;
 
 
-//==============================================================================
-//	Declarations
-//==============================================================================
-
+/************************************************************************/
+/* Declarations                                                                     */
+/************************************************************************/
 void InitService( DWORD dwArgc, LPTSTR *lpszArgv );
 void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext );
 void UpdateServiceStatus( DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint );
 
 
-//==============================================================================
-//	Service entry point
-//==============================================================================
-
+/************************************************************************/
+/* Service entry point                                                                     */
+/************************************************************************/
 void ServiceMain( DWORD dwArgc, LPTSTR *lpszArgv )
 {
     g_ServiceStatusHandle = RegisterServiceCtrlHandlerEx( 
@@ -46,8 +44,14 @@ void ServiceMain( DWORD dwArgc, LPTSTR *lpszArgv )
     InitService( dwArgc, lpszArgv );
 }
 
+/************************************************************************/
+/* Service initialization                                                                     */
+/************************************************************************/
 void InitService( DWORD dwArgc, LPTSTR *lpszArgv )
 {
+	dwArgc;
+	lpszArgv;
+
     g_ServiceStopEvent = CreateEvent( 0, TRUE, FALSE, 0 );
 
     if( !g_ServiceStopEvent )
@@ -58,19 +62,16 @@ void InitService( DWORD dwArgc, LPTSTR *lpszArgv )
 
     UpdateServiceStatus( SERVICE_RUNNING, NO_ERROR, 0 );
 
-    while( true )
-    {
-        WaitForSingleObject( g_ServiceStopEvent, INFINITE );
-        UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
-        return;
-    }
+    WaitForSingleObject( g_ServiceStopEvent, INFINITE );
+    UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
 }
 
 void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext )
 {
+	lpContext;
+
     switch( dwControl )
     {
-
     case SERVICE_CONTROL_STOP:
         UnregisterDeviceInterfaceNotification( );
 
@@ -79,20 +80,20 @@ void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, L
         SetEvent( g_ServiceStopEvent );
         UpdateServiceStatus( g_ServiceStatus.dwCurrentState, NO_ERROR, 0 );
 
-        WriteLog( L"Stopping" );
+        Log( _T("Stopping") );
         break;
 
     case SERVICE_CONTROL_SHUTDOWN:
         UpdateServiceStatus( SERVICE_STOPPED, NO_ERROR, 0 );
-        WriteLog( L"Shutdown" );
-        break;
+		Log( _T("Shutdown") );
+		break;
 
     case SERVICE_CONTROL_HARDWAREPROFILECHANGE:
-        WriteLog( L"Hardware profile changed notification" );
+        Log( _T("Hardware profile changed notification") );
         break;
 
     case SERVICE_CONTROL_DEVICEEVENT:
-        WriteLog( L"Device event" );
+        Log( _T("Device event") );
         DeviceEventProc( dwEventType, lpEventData );
         break;
 
@@ -101,12 +102,13 @@ void ControlHandlerEx( DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, L
 
     default:
         break;
-
     }
 }
 
 void UpdateServiceStatus( DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint )
 {
+	dwWaitHint;
+
     g_ServiceStatus.dwCurrentState = dwCurrentState;
     g_ServiceStatus.dwWin32ExitCode = dwWin32ExitCode;
     g_ServiceStatus.dwWaitHint;

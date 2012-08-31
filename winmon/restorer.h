@@ -2,7 +2,8 @@
 #define restorer_h__
 
 
-const TCHAR	const detect_token[]	= L"DISPLAY";
+//const TCHAR	detect_token[]	= _T("DISPLAY");
+const TCHAR	detect_token[]	= _T("{6ac27878-a6fa-4155-ba85-f98f491d4f33}");
 
 
 void RegisterDeviceInterfaceNotification( SERVICE_STATUS_HANDLE hServiceStatusHandle );

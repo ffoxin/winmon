@@ -15,13 +15,11 @@
 #include <Windows.h>
 #include <tchar.h>
 
-#include "..\log\log.h"
+#include "log.h"
 #include "restorer.h"
 #include "scm.h"
 #include "service.h"
 #include "winmon.h"
-
-#pragma comment(lib, "..\\Debug\\log.lib")
 
 
 //==============================================================================
@@ -38,28 +36,27 @@ void __cdecl _tmain( int argc, TCHAR *argv[] )
 
         if( !StartServiceCtrlDispatcher( DispatchTable ) )
         {
-            WriteLogE( L"_tmain::StartServiceCtrlDispatcher" );
+            Log( _T("_tmain::StartServiceCtrlDispatcher"), GetLastError( ) );
         }
     }
-    else if( wcscmp( argv[argc - 1], L"install" ) == 0 )
+    else if( _tcscmp( argv[argc - 1], _T("install") ) == 0 )
     {
         InstallService( );
     }
-    else if( wcscmp( argv[argc - 1], L"remove" ) == 0 )
+    else if( _tcscmp( argv[argc - 1], _T("remove") ) == 0 )
     {
         RemoveService( );
     }
-    else if( wcscmp( argv[argc - 1], L"start" ) == 0 )
+    else if( _tcscmp( argv[argc - 1], _T("start") ) == 0 )
     {
         StartService( );
     }
-    else if( wcscmp( argv[argc - 1], L"stop" ) == 0 )
+    else if( _tcscmp( argv[argc - 1], _T("stop") ) == 0 )
     {
         StopService( );
     }
-    else if( wcscmp( argv[argc - 1], L"fix" ) == 0 )
+    else if( _tcscmp( argv[argc - 1], _T("fix") ) == 0 )
     {
-        WriteLog( L"running fix" );
         FixWindows( );
     }
 }
