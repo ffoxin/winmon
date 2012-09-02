@@ -1,16 +1,16 @@
-/*	WinMonitor
-*
-*	Detects maximized windows and fix them when external display been plugged/unplugged
-*
-*	Vital Kolas
-*	
-*	ffoxin@gmail.com
-*
-*	Fri, 30.03.2012, 22:54 UTC+3
-*/
-
-
-#define _CRT_SECURE_NO_WARNINGS
+/*
+ * <Fri, 30.03.2012, 22:54 UTC+3>
+ * 
+ * WinMon - Windows Monitor
+ * 
+ * Detects and restores affected maximized windows while external display being plugged/unplugged
+ * 
+ * Vital Kolas
+ * 
+ * ffoxin@gmail.com
+ * 
+ * 2012
+ */
 
 #include <Windows.h>
 #include <tchar.h>
@@ -19,13 +19,18 @@
 #include "restorer.h"
 #include "scm.h"
 #include "service.h"
-#include "winmon.h"
 
 
-//==============================================================================
-//	MAIN
-//==============================================================================
+/************************************************************************/
+/* Service name
+ *  this name will be displayed in SCM (Service Control Manager) */
+/************************************************************************/
+TCHAR service_name[] = _T("DualMon");
 
+
+/************************************************************************/
+/* Main entry point                                                                     */
+/************************************************************************/
 void __cdecl _tmain( int argc, TCHAR *argv[] )
 {
     if( argc == 1 )
@@ -41,19 +46,19 @@ void __cdecl _tmain( int argc, TCHAR *argv[] )
     }
     else if( _tcscmp( argv[argc - 1], _T("install") ) == 0 )
     {
-        InstallService( );
+        ServiceInstall( );
     }
     else if( _tcscmp( argv[argc - 1], _T("remove") ) == 0 )
     {
-        RemoveService( );
+        ServiceRemove( );
     }
     else if( _tcscmp( argv[argc - 1], _T("start") ) == 0 )
     {
-        StartService( );
+        ServiceStart( );
     }
     else if( _tcscmp( argv[argc - 1], _T("stop") ) == 0 )
     {
-        StopService( );
+        ServiceStop( );
     }
     else if( _tcscmp( argv[argc - 1], _T("fix") ) == 0 )
     {

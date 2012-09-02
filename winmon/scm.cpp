@@ -5,10 +5,16 @@
 #include "scm.h"
 
 
-extern TCHAR			service_name[];
+extern TCHAR        service_name[];
 
 
-int InstallService( )
+void CloseServiceHandles( SC_HANDLE hSCManager, SC_HANDLE hService )
+{
+    CloseServiceHandle( hService );
+    CloseServiceHandle( hSCManager );
+}
+
+void ServiceInstall( )
 {
     TCHAR module[MAX_PATH];
     GetModuleFileName( 0, module, MAX_PATH );
@@ -16,9 +22,9 @@ int InstallService( )
     SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_CREATE_SERVICE );
     if( !hSCManager )
     {
-        Log( L"InstallService::OpenSCManager", GetLastError( ) );
+        Log( _T("InstallService::OpenSCManager"), GetLastError( ) );
 
-        return -1;
+        return;
     }
 
     SC_HANDLE hService = CreateService( hSCManager, service_name, service_name, 
@@ -28,28 +34,27 @@ int InstallService( )
 
     if( !hService )
     {
-        Log( L"InstallService::CreateService", GetLastError( ) );
+        Log( _T("InstallService::CreateService"), GetLastError( ) );
+
         CloseServiceHandle( hSCManager );
 
-        return -1;
+        return;
     }
 
-    CloseServiceHandle( hService );
-    CloseServiceHandle( hSCManager );
+    CloseServiceHandles( hSCManager, hService );
 
     Log( _T("Service installed successfully") );
     std::wcout << _T("Service installed successfully") << std::endl;
-
-    return 0;
 }
 
-int RemoveService( )
+void ServiceRemove( )
 {
     SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ALL_ACCESS );
     if( !hSCManager )
     {
         Log( _T("RemoveService::OpenSCManager"), GetLastError( ) );
-        return -1;
+
+        return;
     }
 
     SC_HANDLE hService = OpenService( hSCManager, service_name, SERVICE_STOP | DELETE );
@@ -57,128 +62,170 @@ int RemoveService( )
     if( !hService )
     {
         Log( _T("RemoveService::OpenService"), GetLastError( ) );
-        CloseServiceHandle( hSCManager );
 
-        return -1;
+        CloseServiceHandles( hSCManager, hService );
+
+        return;
     }
 
     DeleteService( hService );
 
-    CloseServiceHandle( hService );
-    CloseServiceHandle( hSCManager );
+    CloseServiceHandles( hSCManager, hService );
 
     Log( _T("Service removed successfully"), GetLastError( ) );
     std::wcout << _T("Service removed successfully") << std::endl;
-
-    return 0;
 }
 
-int StartService( )
+void ServiceStart( )
 {
+    // get handle to the SCM database
     SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ENUMERATE_SERVICE );
     if( !hSCManager )
     {
         Log( _T("StartService::OpenSCManager"), GetLastError( ) );
 
-        return -1;
+        return;
     }
 
+    // get handle to the service
     SC_HANDLE hService = OpenService( hSCManager, service_name, SERVICE_START );
-
     if( !hService )
     {
         Log( _T("StartService::OpenService"), GetLastError( ) );
+
         CloseServiceHandle( hSCManager );
 
-        return -1;
+        return;
+    }
+
+    // check if service is not stopped
+    SERVICE_STATUS_PROCESS  service_status;
+    DWORD                   dwBytesNeeded;
+
+    if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, 
+        (LPBYTE) &service_status, sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded) )
+    {
+        Log( _T("StartService::QueryServiceStatusEx"), GetLastError( ) );
+
+        CloseServiceHandles( hSCManager, hService );
+
+        return;
+    }
+
+    // check if service already running
+    if( service_status.dwCurrentState != SERVICE_STOPPED && 
+        service_status.dwCurrentState != SERVICE_STOP_PENDING )
+    {
+        Log( _T("Attempt to start service failed: service is already running") );
+
+        CloseServiceHandles( hSCManager, hService );
+
+        return;
+    }
+
+    // wait until service finish stopping
+    DWORD       dwWaitTime;
+    ULONGLONG   ulStartTime = GetTickCount64( );
+
+    while( service_status.dwCurrentState == SERVICE_STOP_PENDING )
+    {
+
     }
 
     if( !StartService( hService, 0, 0 ) )
     {
         Log( _T("StartService::StartService"), GetLastError( ) );
-        CloseServiceHandle( hService );
-        CloseServiceHandle( hSCManager );
 
-        return -1;
+        CloseServiceHandles( hSCManager, hService );
+
+        return;
     }
 
-    CloseServiceHandle( hService );
-    CloseServiceHandle( hSCManager );
+    CloseServiceHandles( hSCManager, hService );
 
     Log( _T("Service started") );
     std::wcout << _T("Service started") << std::endl;
-
-    return 0;
 }
 
-int StopService( )
+void ServiceStop( )
 {
-    SERVICE_STATUS_PROCESS	ssp;
-    SC_HANDLE				hSCManager;
-    SC_HANDLE				hService;
-    DWORD					dwWaitTime;
-    DWORD					dwBytesNeeded;
-    DWORD					dwTimeout		= 30000;
-    DWORD					dwStartTime		= GetTickCount( );
-
-    hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ENUMERATE_SERVICE );
+    SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ENUMERATE_SERVICE );
     if( !hSCManager )
     {
         Log( _T("StopService::OpenSCManager"), GetLastError( ) );
-        return -1;
+
+        return;
     }
 
-    hService = OpenService( hSCManager, service_name, SERVICE_STOP | SERVICE_QUERY_STATUS );
+    SC_HANDLE hService = OpenService( hSCManager, service_name, 
+        SERVICE_STOP | SERVICE_QUERY_STATUS );
     if( !hService )
     {
-		Log( _T("StopService::OpenService"), GetLastError( ) );
+        Log( _T("StopService::OpenService"), GetLastError( ) );
 
-		CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hSCManager );
 
-		return -1;
+        return;
     }
 
+    SERVICE_STATUS_PROCESS ssp;
+
     if( !ControlService( hService, SERVICE_CONTROL_STOP, (LPSERVICE_STATUS) &ssp ) )
-	{
+    {
         Log( _T("StopService::ControlService"), GetLastError( ) );
-	}
+
+        CloseServiceHandles( hSCManager, hService );
+
+        return;
+    }
+
+    DWORD dwBytesNeeded;
 
     if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, 
         sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded ) )
     {
-        Log( _T("StopService::QueryServiceStatusEx1"), GetLastError( ) );
+        Log( _T("StopService::QueryServiceStatusEx"), GetLastError( ) );
 
-        CloseServiceHandle( hService );
-        CloseServiceHandle( hSCManager );
+        CloseServiceHandles( hSCManager, hService );
 
-        return -1;
+        return;
     }
 
     if( ssp.dwCurrentState == SERVICE_STOPPED )
     {
         Log( _T("Service stopped") );
         std::wcout << _T("Service stopped") << std::endl;
+
+        CloseServiceHandles( hSCManager, hService );
+
+        return;
     }
+
+    DWORD       dwWaitTime;
+    ULONGLONG   ulStartTime = GetTickCount64( );
 
     while( ssp.dwCurrentState != SERVICE_STOPPED )
     {
         dwWaitTime = ssp.dwWaitHint / 10;
-        if( dwWaitTime < 1000 )
-            dwWaitTime = 1000;
-        else if( dwWaitTime > 10000 )
-            dwWaitTime = 10000;
+        if( dwWaitTime < MIN_WAIT_TIME )
+        {
+            dwWaitTime = MIN_WAIT_TIME;
+        }
+        else if( dwWaitTime > MAX_WAIT_TIME )
+        {
+            dwWaitTime = MAX_WAIT_TIME;
+        }
 
         Sleep( dwWaitTime );
 
         if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, 
             sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded ) )
         {
-            Log( _T("StopService::QueryServiceStatusEx2"), GetLastError( ) );
+            Log( _T("StopService::QueryServiceStatusEx"), GetLastError( ) );
 
-            CloseServiceHandle( hService );
-            CloseServiceHandle( hSCManager );
+            CloseServiceHandles( hSCManager, hService );
 
-            return -1;
+            return;
         }
 
         if( ssp.dwCurrentState == SERVICE_STOPPED )
@@ -187,16 +234,14 @@ int StopService( )
             std::wcout << _T("Service stopped") << std::endl;
         }
 
-        if( GetTickCount( ) - dwStartTime > dwTimeout )
+        if( GetTickCount64( ) - ulStartTime > SVC_WAIT_TIMEOUT )
         {
             Log( _T("Service stop timeout") );
             std::wcout << _T("Service stop timeout") << std::endl;
+
             break;
         }
     }
 
-    CloseServiceHandle( hService );
-    CloseServiceHandle( hSCManager );
-
-    return 0;
+    CloseServiceHandles( hSCManager, hService );
 }

@@ -41,9 +41,6 @@
     <ClInclude Include="restorer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="winmon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
