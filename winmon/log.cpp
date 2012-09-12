@@ -72,7 +72,7 @@ const TCHAR * WINAPI getLogFileName( )
  *  each message logged to file with timestamp
  *  each message followed with corresponding error description (if error_code is non-zero) */
 /************************************************************************/
-int WINAPI Log( const TCHAR *message, int error_code, const TCHAR *source_path )
+const TCHAR * WINAPI Log( const TCHAR *message, int error_code, const TCHAR *source_path )
 {
     static const TCHAR delimiter[] = _T( " " );
 
@@ -84,7 +84,7 @@ int WINAPI Log( const TCHAR *message, int error_code, const TCHAR *source_path )
     log.open( getLogFileName( ), std::ios::app );
     if( log.fail( ) )
     {
-        return -1;
+        return 0;
     }
 
     log.imbue( std::locale( "rus_rus" ) );
@@ -102,24 +102,29 @@ int WINAPI Log( const TCHAR *message, int error_code, const TCHAR *source_path )
         log << _T("log started") << delimiter << getDate( ) << delimiter << getTime( ) << std::endl;
     }
 
-    log << getTime( ) << delimiter;
+    log << getTime( ) << delimiter << message;
 
-    if( error_code == 0 )
+    if( error_code != 0 )
     {
-        log << message;
-    }
-    else
-    {
-        if( !FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_MAX_WIDTH_MASK, 
-            0, error_code, MAKELANGID( LANG_NEUTRAL, SUBLANG_SYS_DEFAULT ), (LPTSTR) &error_buffer, 0, 0 ) )
-            return GetLastError( );
-        log << _T("Error: ") << message << delimiter << 
-            _T("(") << error_code << _T(") ") << 
+        if( !FormatMessage( 
+            FORMAT_MESSAGE_FROM_SYSTEM | 
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+            FORMAT_MESSAGE_MAX_WIDTH_MASK, 
+            0, error_code, 
+            MAKELANGID( LANG_NEUTRAL, SUBLANG_SYS_DEFAULT ), 
+            (LPTSTR) &error_buffer, 0, 0 ) )
+        {
+            return 0;
+        }
+
+        log << delimiter << _T("[") << error_code << _T("]") << 
             error_buffer << delimiter << source_path;
+
         LocalFree( error_buffer );
     }
     
     // some (unicode?) symbols in message could fail output stream
+    // restore stream in this case
     if( log.fail( ) )
     {
         log.close( );
@@ -130,5 +135,5 @@ int WINAPI Log( const TCHAR *message, int error_code, const TCHAR *source_path )
 
     log.close( );
 
-    return 0;
+    return message;
 }

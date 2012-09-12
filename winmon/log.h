@@ -25,7 +25,7 @@
 /************************************************************************/
 /* Logging                                                                     */
 /************************************************************************/
-int WINAPI Log( const wchar_t *message, int error_code = 0, const TCHAR *source_path = __SOURCE__ );
+const TCHAR * WINAPI Log( const TCHAR *message, int error_code = 0, const TCHAR *source_path = __SOURCE__ );
 
 
 #endif // log_h__

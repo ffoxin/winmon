@@ -41,10 +41,10 @@ void ServiceInstall( )
         return;
     }
 
-    CloseServiceHandles( hSCManager, hService );
+    CloseServiceHandle( hSCManager );
+    CloseServiceHandle( hService );
 
-    Log( _T("Service installed successfully") );
-    std::wcout << _T("Service installed successfully") << std::endl;
+    std::wcout << Log( _T("Service installed successfully") ) << std::endl;
 }
 
 void ServiceRemove( )
@@ -63,17 +63,18 @@ void ServiceRemove( )
     {
         Log( _T("RemoveService::OpenService"), GetLastError( ) );
 
-        CloseServiceHandles( hSCManager, hService );
+        CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hService );
 
         return;
     }
 
     DeleteService( hService );
 
-    CloseServiceHandles( hSCManager, hService );
+    CloseServiceHandle( hSCManager );
+    CloseServiceHandle( hService );
 
-    Log( _T("Service removed successfully"), GetLastError( ) );
-    std::wcout << _T("Service removed successfully") << std::endl;
+    std::wcout << Log( _T("Service removed successfully") ) << std::endl;
 }
 
 void ServiceStart( )
@@ -82,7 +83,7 @@ void ServiceStart( )
     SC_HANDLE hSCManager = OpenSCManager( 0, 0, SC_MANAGER_ENUMERATE_SERVICE );
     if( !hSCManager )
     {
-        Log( _T("StartService::OpenSCManager"), GetLastError( ) );
+        Log( _T("ServiceStart::OpenSCManager"), GetLastError( ) );
 
         return;
     }
@@ -91,7 +92,7 @@ void ServiceStart( )
     SC_HANDLE hService = OpenService( hSCManager, service_name, SERVICE_START );
     if( !hService )
     {
-        Log( _T("StartService::OpenService"), GetLastError( ) );
+        Log( _T("ServiceStart::OpenService"), GetLastError( ) );
 
         CloseServiceHandle( hSCManager );
 
@@ -105,9 +106,10 @@ void ServiceStart( )
     if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, 
         (LPBYTE) &service_status, sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded) )
     {
-        Log( _T("StartService::QueryServiceStatusEx"), GetLastError( ) );
+        Log( _T("ServiceStart::QueryServiceStatusEx"), GetLastError( ) );
 
-        CloseServiceHandles( hSCManager, hService );
+        CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hService );
 
         return;
     }
@@ -118,33 +120,80 @@ void ServiceStart( )
     {
         Log( _T("Attempt to start service failed: service is already running") );
 
-        CloseServiceHandles( hSCManager, hService );
+        CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hService );
 
         return;
     }
 
     // wait until service finish stopping
     DWORD       dwWaitTime;
-    ULONGLONG   ulStartTime = GetTickCount64( );
+    DWORD       dwLastCheckPoint = service_status.dwCheckPoint;
+    ULONGLONG   ulStartTickCount = GetTickCount64( );
 
     while( service_status.dwCurrentState == SERVICE_STOP_PENDING )
     {
+        dwWaitTime = service_status.dwWaitHint / 10;
 
+        if( dwWaitTime < MIN_WAIT_TIME )
+        {
+            dwWaitTime = MIN_WAIT_TIME;
+        }
+        else if( dwWaitTime > MAX_WAIT_TIME )
+        {
+            dwWaitTime = MAX_WAIT_TIME;
+        }
+
+        Sleep( dwWaitTime );
+
+        if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &service_status, 
+            sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded ) )
+        {
+            Log( _T("ServiceStart::QueryServiceStatusEx"), GetLastError( ) );
+
+            CloseServiceHandle( hSCManager );
+            CloseServiceHandle( hService );
+
+            break;
+        }
+
+        if( service_status.dwCheckPoint > dwLastCheckPoint )
+        {
+            ulStartTickCount = GetTickCount64( );
+            dwLastCheckPoint = service_status.dwCheckPoint;
+        }
+        else
+        {
+            if( GetTickCount64( ) - ulStartTickCount > service_status.dwWaitHint )
+            {
+                std::wcout << Log( _T("Timeout waiting for service to stop") ) << std::endl;
+
+                CloseServiceHandle( hSCManager );
+                CloseServiceHandle( hService );
+
+                break;
+            }
+        }
     }
 
     if( !StartService( hService, 0, 0 ) )
     {
         Log( _T("StartService::StartService"), GetLastError( ) );
 
-        CloseServiceHandles( hSCManager, hService );
+        CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hService );
 
         return;
     }
+    else
+    {
+        
+    }
 
-    CloseServiceHandles( hSCManager, hService );
+    CloseServiceHandle( hSCManager );
+    CloseServiceHandle( hService );
 
-    Log( _T("Service started") );
-    std::wcout << _T("Service started") << std::endl;
+    std::wcout << Log( _T("Service started") ) << std::endl;
 }
 
 void ServiceStop( )
@@ -168,35 +217,37 @@ void ServiceStop( )
         return;
     }
 
-    SERVICE_STATUS_PROCESS ssp;
+    SERVICE_STATUS_PROCESS service_status;
 
-    if( !ControlService( hService, SERVICE_CONTROL_STOP, (LPSERVICE_STATUS) &ssp ) )
+    if( !ControlService( hService, SERVICE_CONTROL_STOP, (LPSERVICE_STATUS) &service_status ) )
     {
         Log( _T("StopService::ControlService"), GetLastError( ) );
 
-        CloseServiceHandles( hSCManager, hService );
+        CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hService );
 
         return;
     }
 
     DWORD dwBytesNeeded;
 
-    if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, 
+    if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &service_status, 
         sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded ) )
     {
         Log( _T("StopService::QueryServiceStatusEx"), GetLastError( ) );
 
-        CloseServiceHandles( hSCManager, hService );
+        CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hService );
 
         return;
     }
 
-    if( ssp.dwCurrentState == SERVICE_STOPPED )
+    if( service_status.dwCurrentState == SERVICE_STOPPED )
     {
-        Log( _T("Service stopped") );
-        std::wcout << _T("Service stopped") << std::endl;
+        std::wcout << Log( _T("Service stopped") ) << std::endl;
 
-        CloseServiceHandles( hSCManager, hService );
+        CloseServiceHandle( hSCManager );
+        CloseServiceHandle( hService );
 
         return;
     }
@@ -204,9 +255,9 @@ void ServiceStop( )
     DWORD       dwWaitTime;
     ULONGLONG   ulStartTime = GetTickCount64( );
 
-    while( ssp.dwCurrentState != SERVICE_STOPPED )
+    while( service_status.dwCurrentState != SERVICE_STOPPED )
     {
-        dwWaitTime = ssp.dwWaitHint / 10;
+        dwWaitTime = service_status.dwWaitHint / 10;
         if( dwWaitTime < MIN_WAIT_TIME )
         {
             dwWaitTime = MIN_WAIT_TIME;
@@ -218,30 +269,30 @@ void ServiceStop( )
 
         Sleep( dwWaitTime );
 
-        if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, 
+        if( !QueryServiceStatusEx( hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &service_status, 
             sizeof( SERVICE_STATUS_PROCESS ), &dwBytesNeeded ) )
         {
             Log( _T("StopService::QueryServiceStatusEx"), GetLastError( ) );
 
-            CloseServiceHandles( hSCManager, hService );
+            CloseServiceHandle( hSCManager );
+            CloseServiceHandle( hService );
 
             return;
         }
 
-        if( ssp.dwCurrentState == SERVICE_STOPPED )
+        if( service_status.dwCurrentState == SERVICE_STOPPED )
         {
-            Log( _T("Service stopped") );
-            std::wcout << _T("Service stopped") << std::endl;
+            std::wcout << Log( _T("Service stopped") ) << std::endl;
         }
 
         if( GetTickCount64( ) - ulStartTime > SVC_WAIT_TIMEOUT )
         {
-            Log( _T("Service stop timeout") );
-            std::wcout << _T("Service stop timeout") << std::endl;
+            std::wcout << Log( _T("Service stop timeout") ) << std::endl;
 
             break;
         }
     }
 
-    CloseServiceHandles( hSCManager, hService );
+    CloseServiceHandle( hSCManager );
+    CloseServiceHandle( hService );
 }
